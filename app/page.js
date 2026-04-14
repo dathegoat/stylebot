@@ -155,11 +155,10 @@ export default function Home() {
                     <span className="text-gray-800">{item.name}</span>
                     <div className="flex items-center gap-3 ml-2 shrink-0">
                       <span className="text-gray-400">${item.price}</span>
-                      <a href={`https://www.google.com/search?q=mens+${encodeURIComponent(item.name)}`}
-                        target="_blank"
-                        className="text-xs px-3 py-1 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
-                        Shop
-                      </a>
+                      <a href={item.url} target="_blank"
+  className="text-xs px-3 py-1 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
+  Shop
+</a>
                     </div>
                   </div>
                 ))}
