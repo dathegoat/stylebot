@@ -24,6 +24,7 @@ function Skeleton() {
 }
 
 export default function Home() {
+  const [started, setStarted] = useState(false);
   const [step, setStep] = useState(1);
   const [occasion, setOccasion] = useState(null);
   const [style, setStyle] = useState(null);
@@ -52,27 +53,77 @@ export default function Home() {
   }
 
   function reset() {
+    setStarted(false);
     setStep(1); setOccasion(null); setStyle(null);
     setBudget(150); setOutfits(null); setError(null);
+  }
+
+  if (!started) {
+    return (
+      <main className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-md text-center">
+
+          <div className="inline-block bg-gray-50 border border-gray-100 rounded-full px-4 py-1 text-xs text-gray-400 mb-8">
+            AI-powered styling for men
+          </div>
+
+          <h1 className="text-4xl font-semibold text-gray-900 mb-4 leading-tight">
+            Know exactly what<br />to wear. Every time.
+          </h1>
+
+          <p className="text-gray-400 text-base mb-10 leading-relaxed">
+            Tell us the occasion and your style.<br />
+            Get 3 complete outfits with real products<br />
+            you can buy instantly.
+          </p>
+
+          <button onClick={() => setStarted(true)}
+            className="w-full py-4 rounded-xl bg-gray-900 text-white font-medium text-base hover:bg-gray-700 transition-all mb-4">
+            Get styled for free
+          </button>
+
+          <p className="text-xs text-gray-300">No account needed · Takes 30 seconds</p>
+
+          <div className="flex justify-center gap-8 mt-12 pt-8 border-t border-gray-50">
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-900">30s</p>
+              <p className="text-xs text-gray-400 mt-1">To get styled</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-900">3</p>
+              <p className="text-xs text-gray-400 mt-1">Outfit options</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-gray-900">$0</p>
+              <p className="text-xs text-gray-400 mt-1">Always free</p>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="min-h-screen bg-white flex flex-col items-center p-6">
       <div className="w-full max-w-md">
 
-        <div className="mt-8 mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylebot</h1>
-          <p className="text-gray-400 text-sm">Your personal men's stylist</p>
+        <div className="mt-8 mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylebot</h1>
+            <p className="text-gray-400 text-sm">Your personal men's stylist</p>
+          </div>
+          <button onClick={reset} className="text-xs text-gray-400 hover:text-gray-600 underline">
+            Home
+          </button>
         </div>
 
-        {/* Progress */}
         <div className="flex gap-2 mb-8">
           {[1,2,3].map(n => (
             <div key={n} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= n ? 'bg-gray-900' : 'bg-gray-200'}`} />
           ))}
         </div>
 
-        {/* Step 1 - Occasion */}
         {step === 1 && (
           <div>
             <h2 className="text-lg font-medium text-gray-900 mb-1">What's the occasion?</h2>
@@ -92,7 +143,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Step 2 - Style + Budget */}
         {step === 2 && (
           <div>
             <h2 className="text-lg font-medium text-gray-900 mb-1">Your style vibe</h2>
@@ -123,7 +173,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Step 3 - Results */}
         {step === 3 && (
           <div>
             <div className="mb-6">
@@ -136,9 +185,7 @@ export default function Home() {
             {loading && <Skeleton />}
 
             {error && (
-              <div className="bg-red-50 text-red-500 text-sm rounded-xl p-4 mb-4">
-                {error}
-              </div>
+              <div className="bg-red-50 text-red-500 text-sm rounded-xl p-4 mb-4">{error}</div>
             )}
 
             {outfits && outfits.map((outfit, i) => (
@@ -156,9 +203,9 @@ export default function Home() {
                     <div className="flex items-center gap-3 ml-2 shrink-0">
                       <span className="text-gray-400">${item.price}</span>
                       <a href={item.url} target="_blank"
-  className="text-xs px-3 py-1 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
-  Shop
-</a>
+                        className="text-xs px-3 py-1 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
+                        Shop
+                      </a>
                     </div>
                   </div>
                 ))}
