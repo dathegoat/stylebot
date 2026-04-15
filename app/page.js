@@ -1,4 +1,5 @@
 'use client';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 
 const occasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
@@ -39,6 +40,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setStep(3);
+    posthog.capture('outfit_requested', { occasion, style, budget });
     try {
       const res = await fetch('/api/outfits', {
         method: 'POST',
@@ -48,6 +50,7 @@ export default function Home() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setOutfits(data.outfits);
+      posthog.capture('outfit_received', { occasion, style, budget });
     } catch(e) {
       setError('Something went wrong. Please try again.');
     }
@@ -67,6 +70,7 @@ export default function Home() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     setEmailSubmitted(true);
+    posthog.capture('email_captured');
     setEmailError(null);
   } catch(e) {
     setEmailError('Something went wrong. Please try again.');
@@ -223,6 +227,7 @@ export default function Home() {
                     <div className="flex items-center gap-3 ml-2 shrink-0">
                       <span className="text-gray-400">${item.price}</span>
                       <a href={item.url} target="_blank"
+                        onClick={() => posthog.capture('shop_clicked', { item: item.name, price: item.price })}
                         className="text-xs px-3 py-1 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
                         Shop
                       </a>
