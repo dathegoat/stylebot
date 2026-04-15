@@ -23,7 +23,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="font-medium text-gray-900 mb-2">Cookies</h2>
-            <p>Stylebot does not use tracking cookies or advertising cookies.</p>
+            <p>Stylebot uses PostHog analytics which may set cookies to help us understand how users interact with the app. We do not use advertising cookies or sell any data to third parties. You can disable cookies in your browser settings at any time.</p>
           </section>
 
           <section>
