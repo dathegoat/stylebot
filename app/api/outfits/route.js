@@ -1,3 +1,5 @@
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 import { NextResponse } from 'next/server';
 
 const AFFILIATE_TAG = 'stylebot20-20';
@@ -30,7 +32,10 @@ const PRODUCTS = {
   "pocket square": { name: "SelectedStyle White Pocket Square", url: `https://www.amazon.com/dp/B07BFRXFMV?tag=${AFFILIATE_TAG}`, price: 10, color: "white", formality: "formal", styles: ["classic", "smart casual"], type: "accessory" },
   "navy baseball cap": { name: "CHOK LIDS Navy Adjustable Baseball Cap", url: `https://www.amazon.com/dp/B0C8QXWBYY?tag=${AFFILIATE_TAG}`, price: 18, color: "navy", formality: "casual", styles: ["streetwear", "rugged"], type: "accessory" }
 };
-
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, '1 h'),
+});
 function matchProduct(itemName) {
   const lower = itemName.toLowerCase();
   
@@ -88,6 +93,11 @@ function validateAndFixOutfit(outfit) {
 }
 
 export async function POST(req) {
+  const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+  }
   const { occasion, style, budget } = await req.json();
 
   const productList = Object.entries(PRODUCTS)
