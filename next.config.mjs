@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'image.pollinations.ai',
+      },
+    ],
+  },
   async headers() {
     return [
       {
@@ -29,11 +37,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com https://us-assets.i.posthog.com",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https:",
-              "connect-src 'self' https://api.openai.com https://us.i.posthog.com https://*.supabase.co https://*.upstash.io",
+              "img-src 'self' data: https: blob:",
+              "connect-src 'self' https://api.openai.com https://us.i.posthog.com https://us-assets.i.posthog.com https://*.supabase.co https://*.upstash.io https://image.pollinations.ai",
+              "worker-src 'self' blob:",
               "frame-ancestors 'none'",
             ].join('; '),
           },

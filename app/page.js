@@ -36,6 +36,7 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState(null);
+
   async function getOutfits() {
     setLoading(true);
     setError(null);
@@ -56,58 +57,55 @@ export default function Home() {
     }
     setLoading(false);
   }
+
   async function submitEmail() {
-  if (!email || !email.includes('@')) {
-    setEmailError('Please enter a valid email.');
-    return;
+    if (!email || !email.includes('@')) {
+      setEmailError('Please enter a valid email.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setEmailSubmitted(true);
+      posthog.capture('email_captured');
+      setEmailError(null);
+    } catch(e) {
+      setEmailError('Something went wrong. Please try again.');
+    }
   }
-  try {
-    const res = await fetch('/api/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    setEmailSubmitted(true);
-    posthog.capture('email_captured');
-    setEmailError(null);
-  } catch(e) {
-    setEmailError('Something went wrong. Please try again.');
-  }
-}
+
   function reset() {
     setStarted(false);
     setStep(1); setOccasion(null); setStyle(null);
     setBudget(150); setOutfits(null); setError(null);
+    setEmail(''); setEmailSubmitted(false);
   }
 
   if (!started) {
     return (
       <main className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-md text-center">
-
           <div className="inline-block bg-gray-50 border border-gray-100 rounded-full px-4 py-1 text-xs text-gray-400 mb-8">
             AI-powered styling for men
           </div>
-
           <h1 className="text-4xl font-semibold text-gray-900 mb-4 leading-tight">
             Know exactly what<br />to wear. Every time.
           </h1>
-
           <p className="text-gray-400 text-base mb-10 leading-relaxed">
             Tell us the occasion and your style.<br />
             Get 3 complete outfits with real products<br />
             you can buy instantly.
           </p>
-
           <button onClick={() => setStarted(true)}
             className="w-full py-4 rounded-xl bg-gray-900 text-white font-medium text-base hover:bg-gray-700 transition-all mb-4">
             Get styled for free
           </button>
-
           <p className="text-xs text-gray-300">No account needed · Takes 30 seconds</p>
-
           <div className="flex justify-center gap-8 mt-12 pt-8 border-t border-gray-50">
             <div className="text-center">
               <p className="text-2xl font-semibold text-gray-900">30s</p>
@@ -122,7 +120,6 @@ export default function Home() {
               <p className="text-xs text-gray-400 mt-1">Always free</p>
             </div>
           </div>
-
         </div>
       </main>
     );
@@ -240,33 +237,35 @@ export default function Home() {
                 </div>
               </div>
             ))}
-{outfits && !emailSubmitted && (
-  <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50">
-    <p className="font-medium text-gray-900 mb-1">Get future outfit drops</p>
-    <p className="text-sm text-gray-400 mb-4">We'll send you new styles and seasonal picks. No spam.</p>
-    <div className="flex gap-2">
-      <input
-        type="email"
-        placeholder="your@email.com"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-gray-400"
-      />
-      <button onClick={submitEmail}
-        className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-all">
-        Join
-      </button>
-    </div>
-    {emailError && <p className="text-xs text-red-400 mt-2">{emailError}</p>}
-  </div>
-)}
 
-{outfits && emailSubmitted && (
-  <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50 text-center">
-    <p className="font-medium text-gray-900 mb-1">You're in!</p>
-    <p className="text-sm text-gray-400">We'll keep you updated with new styles.</p>
-  </div>
-)}
+            {outfits && !emailSubmitted && (
+              <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50">
+                <p className="font-medium text-gray-900 mb-1">Get future outfit drops</p>
+                <p className="text-sm text-gray-400 mb-4">We'll send you new styles and seasonal picks. No spam.</p>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-gray-400"
+                  />
+                  <button onClick={submitEmail}
+                    className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-all">
+                    Join
+                  </button>
+                </div>
+                {emailError && <p className="text-xs text-red-400 mt-2">{emailError}</p>}
+              </div>
+            )}
+
+            {outfits && emailSubmitted && (
+              <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50 text-center">
+                <p className="font-medium text-gray-900 mb-1">You're in!</p>
+                <p className="text-sm text-gray-400">We'll keep you updated with new styles.</p>
+              </div>
+            )}
+
             {!loading && (
               <div className="flex gap-3 mt-2">
                 <button onClick={getOutfits}
