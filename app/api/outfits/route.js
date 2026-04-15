@@ -98,7 +98,21 @@ export async function POST(req) {
   if (!success) {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
-  const { occasion, style, budget } = await req.json();
+ const body = await req.json();
+const { occasion, style, budget } = body;
+
+const validOccasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
+const validStyles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
+
+if (!validOccasions.includes(occasion)) {
+  return NextResponse.json({ error: 'Invalid occasion' }, { status: 400 });
+}
+if (!validStyles.includes(style)) {
+  return NextResponse.json({ error: 'Invalid style' }, { status: 400 });
+}
+if (!budget || typeof budget !== 'number' || budget < 50 || budget > 500) {
+  return NextResponse.json({ error: 'Invalid budget' }, { status: 400 });
+}
 
   const productList = Object.entries(PRODUCTS)
     .map(([key, p]) => `- ${key} | type: ${p.type} | color: ${p.color} | formality: ${p.formality} | styles: ${p.styles.join(', ')} | $${p.price}`)
