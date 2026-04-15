@@ -32,7 +32,9 @@ export default function Home() {
   const [outfits, setOutfits] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  const [email, setEmail] = useState('');
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [emailError, setEmailError] = useState(null);
   async function getOutfits() {
     setLoading(true);
     setError(null);
@@ -51,7 +53,25 @@ export default function Home() {
     }
     setLoading(false);
   }
-
+  async function submitEmail() {
+  if (!email || !email.includes('@')) {
+    setEmailError('Please enter a valid email.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    setEmailSubmitted(true);
+    setEmailError(null);
+  } catch(e) {
+    setEmailError('Something went wrong. Please try again.');
+  }
+}
   function reset() {
     setStarted(false);
     setStep(1); setOccasion(null); setStyle(null);
@@ -215,7 +235,33 @@ export default function Home() {
                 </div>
               </div>
             ))}
+{outfits && !emailSubmitted && (
+  <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50">
+    <p className="font-medium text-gray-900 mb-1">Get future outfit drops</p>
+    <p className="text-sm text-gray-400 mb-4">We'll send you new styles and seasonal picks. No spam.</p>
+    <div className="flex gap-2">
+      <input
+        type="email"
+        placeholder="your@email.com"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-gray-400"
+      />
+      <button onClick={submitEmail}
+        className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-all">
+        Join
+      </button>
+    </div>
+    {emailError && <p className="text-xs text-red-400 mt-2">{emailError}</p>}
+  </div>
+)}
 
+{outfits && emailSubmitted && (
+  <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50 text-center">
+    <p className="font-medium text-gray-900 mb-1">You're in!</p>
+    <p className="text-sm text-gray-400">We'll keep you updated with new styles.</p>
+  </div>
+)}
             {!loading && (
               <div className="flex gap-3 mt-2">
                 <button onClick={getOutfits}
