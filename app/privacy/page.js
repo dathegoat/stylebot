@@ -28,7 +28,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="font-medium text-gray-900 mb-2">Contact</h2>
-            <p>If you have any questions about this policy, email us at drewcadams06@gmail.com</p>
+            <p>If you have any questions about this policy, email us at stylebot6800@gmail.com</p>
           </section>
         </div>
 
