@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Stylebot - Your Personal Men's Stylist",
   description: "AI-powered outfit recommendations for men. Get styled for any occasion in seconds.",
+  verification: {
+    other: {
+      'impact-site-verification': '2a9cdbd6-9e56-4b0c-b15c-a0d56863f7c3',
+    },
+  },
 };
 
 export default function RootLayout({ children }) {
