@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PHProvider } from "./providers";
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
       <PHProvider>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           {children}
+          <Analytics />
           <footer className="w-full text-center py-8 px-6 text-xs text-gray-400 border-t border-gray-100 mt-12">
             <p className="mb-2">
               Stylebot uses AI to suggest outfits. Suggestions are for inspiration only and do not constitute professional styling advice.
