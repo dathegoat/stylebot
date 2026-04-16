@@ -3,7 +3,6 @@ import { Redis } from '@upstash/redis';
 import { NextResponse } from 'next/server';
 
 const AFFILIATE_TAG = 'stylebot20-20';
-
 const PRODUCTS = {
   "white oxford shirt": { name: "Cotton King Slim Fit Oxford Shirt", url: `https://www.amazon.com/dp/B0D3M26MWK?tag=${AFFILIATE_TAG}`, price: 35, color: "white", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "top" },
   "slim chino pants": { name: "Amazon Essentials Slim Fit Tan Chinos", url: `https://www.amazon.com/dp/B077597W8N?tag=${AFFILIATE_TAG}`, price: 35, color: "tan", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "bottom" },
@@ -43,7 +42,6 @@ const PRODUCTS = {
   "black turtleneck": { name: "Cotrasen Black Turtleneck Pullover Sweater", url: `https://www.amazon.com/dp/B0FFSJQB1C?tag=${AFFILIATE_TAG}`, price: 38, color: "black", formality: "smart casual", styles: ["minimal", "classic", "smart casual"], type: "top" },
   "black sunglasses": { name: "WearMe Pro Polarized Square Black Sunglasses", url: `https://www.amazon.com/dp/B0986TXSH4?tag=${AFFILIATE_TAG}`, price: 22, color: "black", formality: "casual", styles: ["minimal", "streetwear", "smart casual", "classic"], type: "accessory" }
 };
-
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(10, '1 h'),
@@ -90,7 +88,6 @@ function validateAndFixOutfit(outfit) {
     }))
   };
 }
-
 export async function POST(req) {
   const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
   const { success } = await ratelimit.limit(ip);
@@ -115,34 +112,55 @@ export async function POST(req) {
   }
 
   const productList = Object.entries(PRODUCTS)
-    .map(([key, p]) => `- ${key} | type: ${p.type} | color: ${p.color} | formality: ${p.formality} | styles: ${p.styles.join(', ')} | $${p.price}`)
+    .map(([key, p]) => '- ' + key + ' | type: ' + p.type + ' | color: ' + p.color + ' | formality: ' + p.formality + ' | styles: ' + p.styles.join(', ') + ' | $' + p.price)
     .join('\n');
 
-  const prompt = `You are an expert men's personal stylist. Build exactly 3 complete outfits.
-
-CUSTOMER: Occasion: ${occasion} | Style: ${style} | Budget: $${budget}
-
-PRODUCTS:
-${productList}
-
-RULES:
-- Each outfit: 1 top + 1 bottom + 1 shoes + optionally 1 accessory
-- No two tops, no two bottoms, no two shoes in same outfit
-- Match colors well — neutrals pair with anything
-- Match shoe formality to occasion
-- Each outfit must be distinctly different
-- Only use products from the list above
-- Stay under budget
-
-Return EXACTLY 3 outfits as a raw JSON array only:
-[{"title":"...","why":"Mention specific colors and why they work together.","items":[{"name":"exact key","price":0},{"name":"exact key","price":0},{"name":"exact key","price":0}]}]`;
+  const prompt = 'You are Marcus, an expert mens personal stylist with 10 years of experience. You dress men with confidence and precision.\n\n' +
+    'CUSTOMER: Occasion: ' + occasion + ' | Style: ' + style + ' | Budget: $' + budget + '\n\n' +
+    'AVAILABLE PRODUCTS (key | type | color | formality | styles | price):\n' +
+    productList + '\n\n' +
+    'COLOR THEORY SYSTEM:\n' +
+    'NEUTRAL COLORS: white, grey, black, navy, tan, khaki, charcoal - all neutrals pair with each other\n\n' +
+    'COLOR PAIRING RULES:\n' +
+    '- Navy + white = classic, always works\n' +
+    '- Navy + tan/khaki = smart casual staple\n' +
+    '- Navy + grey = clean and professional\n' +
+    '- Black + white = sharp and minimal\n' +
+    '- Black + grey = sleek and modern\n' +
+    '- Tan + white = warm and clean\n' +
+    '- Brown shoes + tan/khaki/navy bottoms = correct\n' +
+    '- Brown shoes + black bottoms = NEVER\n' +
+    '- Navy + black in same outfit = NEVER\n' +
+    '- Belt color must match shoe color when both present\n' +
+    '- Maximum 3 colors per outfit\n\n' +
+    'FORMALITY RULES:\n' +
+    '- Formal event: dress shoes required, no sneakers, blazer or dress shirt preferred\n' +
+    '- Interview: dress shoes or clean oxfords, dress shirt or blazer, no joggers\n' +
+    '- Business casual: clean sneakers or smart shoes, chinos or trousers, no athletic wear\n' +
+    '- Date night: chelsea boots or leather sneakers, elevated casual, no athletic wear\n' +
+    '- Party: creative combinations allowed, streetwear elements welcome\n' +
+    '- Casual hangout: comfort focused, any clean shoes\n\n' +
+    'STYLE RULES:\n' +
+    '- Minimal: neutral colors only, clean lines, no patterns\n' +
+    '- Classic: navy/white/tan/brown palette, timeless pieces, leather shoes\n' +
+    '- Smart casual: elevated basics, clean footwear, structured tops\n' +
+    '- Streetwear: bold combos, layers, sneakers required, caps allowed\n' +
+    '- Rugged: flannel, denim, boots, cargo, earth tones\n\n' +
+    'CONSTRUCTION RULES:\n' +
+    '- Each outfit = exactly 1 top + 1 bottom + 1 shoes + max 1 accessory\n' +
+    '- Never 2 tops, 2 bottoms, or 2 shoes in same outfit\n' +
+    '- All 3 outfits must be distinctly different\n' +
+    '- Only use products from the list\n' +
+    '- Stay under budget\n\n' +
+    'Return EXACTLY 3 outfits as raw JSON only, no markdown:\n' +
+    '[{"title":"Confident outfit name","why":"Speak like a stylist to the customer. Mention specific colors, why they work together, and why this is right for this occasion.","items":[{"name":"exact product key","price":0},{"name":"exact product key","price":0},{"name":"exact product key","price":0}]}]';
 
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Authorization': 'Bearer ' + process.env.OPENAI_API_KEY,
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
