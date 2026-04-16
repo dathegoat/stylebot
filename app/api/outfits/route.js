@@ -30,37 +30,41 @@ const PRODUCTS = {
   "brown leather belt": { name: "WOLFANT Full Grain Brown Leather Belt", url: `https://www.amazon.com/dp/B0FF46D7R7?tag=${AFFILIATE_TAG}`, price: 25, color: "brown", formality: "smart casual", styles: ["classic", "smart casual", "minimal", "rugged"], type: "accessory" },
   "black watch": { name: "Minimalist Waterproof Military Watch", url: `https://www.amazon.com/dp/B07MB37YJ8?tag=${AFFILIATE_TAG}`, price: 30, color: "black", formality: "casual", styles: ["minimal", "streetwear", "smart casual"], type: "accessory" },
   "pocket square": { name: "SelectedStyle White Pocket Square", url: `https://www.amazon.com/dp/B07BFRXFMV?tag=${AFFILIATE_TAG}`, price: 10, color: "white", formality: "formal", styles: ["classic", "smart casual"], type: "accessory" },
-  "navy baseball cap": { name: "CHOK LIDS Navy Adjustable Baseball Cap", url: `https://www.amazon.com/dp/B0C8QXWBYY?tag=${AFFILIATE_TAG}`, price: 18, color: "navy", formality: "casual", styles: ["streetwear", "rugged"], type: "accessory" }
+  "navy baseball cap": { name: "CHOK LIDS Navy Adjustable Baseball Cap", url: `https://www.amazon.com/dp/B0C8QXWBYY?tag=${AFFILIATE_TAG}`, price: 18, color: "navy", formality: "casual", styles: ["streetwear", "rugged"], type: "accessory" },
+  "navy blazer": { name: "COOFANDY Slim Fit Navy Blazer", url: `https://www.amazon.com/dp/B0DDK7SQDT?tag=${AFFILIATE_TAG}`, price: 65, color: "navy", formality: "smart casual", styles: ["smart casual", "classic", "minimal"], type: "top" },
+  "white dress shirt": { name: "Alimens Gentle Stretch White Dress Shirt", url: `https://www.amazon.com/dp/B0BRWNDDT8?tag=${AFFILIATE_TAG}`, price: 30, color: "white", formality: "formal", styles: ["classic", "smart casual"], type: "top" },
+  "black suit trousers": { name: "Plaid and Plain Slim Fit Black Dress Trousers", url: `https://www.amazon.com/dp/B086C2JHZ3?tag=${AFFILIATE_TAG}`, price: 40, color: "black", formality: "formal", styles: ["classic", "smart casual"], type: "bottom" },
+  "brown oxford shoes": { name: "Cole Haan Lenox Hill Brown Oxford", url: `https://www.amazon.com/dp/B00BECIOH4?tag=${AFFILIATE_TAG}`, price: 120, color: "brown", formality: "formal", styles: ["classic", "smart casual"], type: "shoes" },
+  "grey overcoat": { name: "COOFANDY Single Breasted Grey Overcoat", url: `https://www.amazon.com/dp/B0FGXKPCBV?tag=${AFFILIATE_TAG}`, price: 89, color: "grey", formality: "smart casual", styles: ["classic", "minimal", "smart casual"], type: "top" },
+  "grey zip hoodie": { name: "Hanes Full Zip EcoSmart Grey Hoodie", url: `https://www.amazon.com/dp/B00JUM4TGK?tag=${AFFILIATE_TAG}`, price: 28, color: "grey", formality: "casual", styles: ["streetwear", "minimal"], type: "top" },
+  "navy windbreaker": { name: "MAGCOMSEN Lightweight Navy Windbreaker", url: `https://www.amazon.com/dp/B0BJZXCFMR?tag=${AFFILIATE_TAG}`, price: 45, color: "navy", formality: "casual", styles: ["streetwear", "rugged", "minimal"], type: "top" },
+  "khaki shorts": { name: "GINGTTO Slim Fit Khaki Chino Shorts", url: `https://www.amazon.com/dp/B0967WCB1M?tag=${AFFILIATE_TAG}`, price: 32, color: "khaki", formality: "casual", styles: ["smart casual", "minimal", "rugged"], type: "bottom" },
+  "white linen shirt": { name: "DEMEANOR Lightweight White Linen Shirt", url: `https://www.amazon.com/dp/B0G4N2PYPJ?tag=${AFFILIATE_TAG}`, price: 35, color: "white", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "top" },
+  "black turtleneck": { name: "Cotrasen Black Turtleneck Pullover Sweater", url: `https://www.amazon.com/dp/B0FFSJQB1C?tag=${AFFILIATE_TAG}`, price: 38, color: "black", formality: "smart casual", styles: ["minimal", "classic", "smart casual"], type: "top" },
+  "black sunglasses": { name: "WearMe Pro Polarized Square Black Sunglasses", url: `https://www.amazon.com/dp/B0986TXSH4?tag=${AFFILIATE_TAG}`, price: 22, color: "black", formality: "casual", styles: ["minimal", "streetwear", "smart casual", "classic"], type: "accessory" }
 };
+
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(10, '1 h'),
 });
+
 function matchProduct(itemName) {
   const lower = itemName.toLowerCase();
-  
-  // exact key match first
   if (PRODUCTS[lower]) return { key: lower, ...PRODUCTS[lower] };
-  
-  // check if input contains a key
   for (const [key, product] of Object.entries(PRODUCTS)) {
     if (lower.includes(key)) return { key, ...product };
   }
-  
-  // check if key words appear in input
   for (const [key, product] of Object.entries(PRODUCTS)) {
     const words = key.split(' ').filter(w => w.length > 3);
     const matchCount = words.filter(w => lower.includes(w)).length;
     if (matchCount >= 2) return { key, ...product };
   }
-
-  // check if input words appear in product name
   for (const [key, product] of Object.entries(PRODUCTS)) {
     if (product.name.toLowerCase().includes(lower) || lower.includes(product.name.toLowerCase())) {
       return { key, ...product };
     }
   }
-
   return null;
 }
 
@@ -75,12 +79,7 @@ function validateAndFixOutfit(outfit) {
   const shoes = items.filter(i => i.type === 'shoes');
   const accessories = items.filter(i => i.type === 'accessory');
 
-  const fixedItems = [
-    tops[0],
-    bottoms[0],
-    shoes[0],
-    accessories[0]
-  ].filter(Boolean);
+  const fixedItems = [tops[0], bottoms[0], shoes[0], accessories[0]].filter(Boolean);
 
   return {
     ...outfit,
@@ -98,21 +97,22 @@ export async function POST(req) {
   if (!success) {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
   }
- const body = await req.json();
-const { occasion, style, budget } = body;
 
-const validOccasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
-const validStyles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
+  const body = await req.json();
+  const { occasion, style, budget } = body;
 
-if (!validOccasions.includes(occasion)) {
-  return NextResponse.json({ error: 'Invalid occasion' }, { status: 400 });
-}
-if (!validStyles.includes(style)) {
-  return NextResponse.json({ error: 'Invalid style' }, { status: 400 });
-}
-if (!budget || typeof budget !== 'number' || budget < 50 || budget > 500) {
-  return NextResponse.json({ error: 'Invalid budget' }, { status: 400 });
-}
+  const validOccasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
+  const validStyles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
+
+  if (!validOccasions.includes(occasion)) {
+    return NextResponse.json({ error: 'Invalid occasion' }, { status: 400 });
+  }
+  if (!validStyles.includes(style)) {
+    return NextResponse.json({ error: 'Invalid style' }, { status: 400 });
+  }
+  if (!budget || typeof budget !== 'number' || budget < 50 || budget > 500) {
+    return NextResponse.json({ error: 'Invalid budget' }, { status: 400 });
+  }
 
   const productList = Object.entries(PRODUCTS)
     .map(([key, p]) => `- ${key} | type: ${p.type} | color: ${p.color} | formality: ${p.formality} | styles: ${p.styles.join(', ')} | $${p.price}`)
