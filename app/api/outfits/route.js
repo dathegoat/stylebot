@@ -40,7 +40,28 @@ const PRODUCTS = {
   "khaki shorts": { name: "GINGTTO Slim Fit Khaki Chino Shorts", url: `https://www.amazon.com/dp/B0967WCB1M?tag=${AFFILIATE_TAG}`, price: 32, color: "khaki", formality: "casual", styles: ["smart casual", "minimal", "rugged"], type: "bottom" },
   "white linen shirt": { name: "DEMEANOR Lightweight White Linen Shirt", url: `https://www.amazon.com/dp/B0G4N2PYPJ?tag=${AFFILIATE_TAG}`, price: 35, color: "white", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "top" },
   "black turtleneck": { name: "Cotrasen Black Turtleneck Pullover Sweater", url: `https://www.amazon.com/dp/B0FFSJQB1C?tag=${AFFILIATE_TAG}`, price: 38, color: "black", formality: "smart casual", styles: ["minimal", "classic", "smart casual"], type: "top" },
-  "black sunglasses": { name: "WearMe Pro Polarized Square Black Sunglasses", url: `https://www.amazon.com/dp/B0986TXSH4?tag=${AFFILIATE_TAG}`, price: 22, color: "black", formality: "casual", styles: ["minimal", "streetwear", "smart casual", "classic"], type: "accessory" }
+  "black sunglasses": { name: "WearMe Pro Polarized Square Black Sunglasses", url: `https://www.amazon.com/dp/B0986TXSH4?tag=${AFFILIATE_TAG}`, price: 22, color: "black", formality: "casual", styles: ["minimal", "streetwear", "smart casual", "classic"], type: "accessory" },
+  "black oxford shirt": { name: "LucMatton Slim Fit Black Oxford Shirt", url: `https://www.amazon.com/dp/B0G63Q9THJ?tag=${AFFILIATE_TAG}`, price: 35, color: "black", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "top" },
+  "light blue oxford shirt": { name: "Cotton King Slim Fit Light Blue Oxford", url: `https://www.amazon.com/dp/B0D3M4SW75?tag=${AFFILIATE_TAG}`, price: 35, color: "light blue", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "top" },
+  "burgundy henley": { name: "MAGNIVIT Burgundy Long Sleeve Henley", url: `https://www.amazon.com/dp/B0DQV26FL9?tag=${AFFILIATE_TAG}`, price: 28, color: "burgundy", formality: "casual", styles: ["smart casual", "rugged", "classic"], type: "top" },
+  "olive flannel shirt": { name: "Dubinik Olive Flannel Shirt", url: `https://www.amazon.com/dp/B09371JWT4?tag=${AFFILIATE_TAG}`, price: 30, color: "olive", formality: "casual", styles: ["rugged", "smart casual"], type: "top" },
+  "camel quarter zip": { name: "COOFANDY Camel Quarter Zip Pullover", url: `https://www.amazon.com/dp/B0FD9C4NKC?tag=${AFFILIATE_TAG}`, price: 55, color: "camel", formality: "smart casual", styles: ["classic", "smart casual", "minimal"], type: "top" },
+  "navy crew neck t-shirt": { name: "PURPLE KIWI Ultra-Soft Navy Crew Tee", url: `https://www.amazon.com/dp/B0G2BBD8T5?tag=${AFFILIATE_TAG}`, price: 22, color: "navy", formality: "casual", styles: ["minimal", "streetwear", "smart casual"], type: "top" },
+  "white polo shirt": { name: "JMIERR Classic White Polo Shirt", url: `https://www.amazon.com/dp/B0DJQT3PSF?tag=${AFFILIATE_TAG}`, price: 28, color: "white", formality: "smart casual", styles: ["smart casual", "classic", "minimal"], type: "top" },
+  "brown turtleneck": { name: "PJ PAUL JONES Brown Turtleneck Sweater", url: `https://www.amazon.com/dp/B0D95D6Z9D?tag=${AFFILIATE_TAG}`, price: 45, color: "brown", formality: "smart casual", styles: ["minimal", "classic", "smart casual"], type: "top" },
+  "olive chino pants": { name: "Amazon Essentials Slim Fit Olive Chinos", url: `https://www.amazon.com/dp/B07BJLD63B?tag=${AFFILIATE_TAG}`, price: 35, color: "olive", formality: "smart casual", styles: ["minimal", "smart casual", "rugged"], type: "bottom" },
+  "grey chino pants": { name: "GINGTTO Stretch Grey Chinos", url: `https://www.amazon.com/dp/B0GMC2LF1J?tag=${AFFILIATE_TAG}`, price: 38, color: "grey", formality: "smart casual", styles: ["minimal", "smart casual", "classic"], type: "bottom" },
+  "black slim jeans": { name: "Heyfanee Black Stretch Slim Jeans", url: `https://www.amazon.com/dp/B08LMWGXXC?tag=${AFFILIATE_TAG}`, price: 45, color: "black", formality: "casual", styles: ["minimal", "streetwear", "classic"], type: "bottom" },
+  "light wash jeans": { name: "Woenzaia Light Wash Slim Jeans", url: `https://www.amazon.com/dp/B0DFC1XR43?tag=${AFFILIATE_TAG}`, price: 42, color: "light blue", formality: "casual", styles: ["smart casual", "streetwear", "rugged"], type: "bottom" },
+  "navy chino shorts": { name: "Amazon Essentials Navy Chino Shorts", url: `https://www.amazon.com/dp/B0C4YHVZC6?tag=${AFFILIATE_TAG}`, price: 28, color: "navy", formality: "casual", styles: ["smart casual", "minimal", "classic"], type: "bottom" },
+  "grey dress trousers": { name: "Plaid and Plain Slim Fit Grey Dress Trousers", url: `https://www.amazon.com/dp/B0DGTMPT3Q?tag=${AFFILIATE_TAG}`, price: 40, color: "grey", formality: "formal", styles: ["classic", "smart casual"], type: "bottom" },
+  "white high top sneakers": { name: "Reebok Royal BB4500 White High Tops", url: `https://www.amazon.com/dp/B07B4YXM85?tag=${AFFILIATE_TAG}`, price: 65, color: "white", formality: "casual", styles: ["streetwear"], type: "shoes" },
+  "grey sneakers": { name: "Cole Haan GrandPro Grey Canvas Sneakers", url: `https://www.amazon.com/dp/B08KJH66B5?tag=${AFFILIATE_TAG}`, price: 75, color: "grey", formality: "smart casual", styles: ["smart casual", "minimal", "classic"], type: "shoes" },
+  "black chelsea boots": { name: "Bruno Marc Black Chelsea Boots", url: `https://www.amazon.com/dp/B06XTW8TPV?tag=${AFFILIATE_TAG}`, price: 55, color: "black", formality: "smart casual", styles: ["smart casual", "minimal", "classic", "streetwear"], type: "shoes" },
+  "tan oxford shoes": { name: "Cole Haan Lenox Hill Tan Oxford", url: `https://www.amazon.com/dp/B00BECIPH8?tag=${AFFILIATE_TAG}`, price: 120, color: "tan", formality: "formal", styles: ["classic", "smart casual"], type: "shoes" },
+  "navy boat shoes": { name: "HEYDUDE Harbor Navy Boat Shoes", url: `https://www.amazon.com/dp/B0F818JFPF?tag=${AFFILIATE_TAG}`, price: 70, color: "navy", formality: "casual", styles: ["smart casual", "minimal", "classic"], type: "shoes" },
+  "black rugged boots": { name: "Jousen Black Casual Hiking Boots", url: `https://www.amazon.com/dp/B0C5MK6C7W?tag=${AFFILIATE_TAG}`, price: 60, color: "black", formality: "casual", styles: ["rugged", "streetwear"], type: "shoes" },
+  "brown derby shoes": { name: "Cole Haan Hawthorne Brown Derby Oxford", url: `https://www.amazon.com/dp/B08SQ5P7KD?tag=${AFFILIATE_TAG}`, price: 110, color: "brown", formality: "formal", styles: ["classic", "smart casual"], type: "shoes" }
 };
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
@@ -136,6 +157,12 @@ export async function POST(req) {
     '- Brown shoes + tan/khaki/navy bottoms = correct\n' +
     '- Brown shoes + black bottoms = NEVER\n' +
     '- Navy + black in same outfit = NEVER\n' +
+    '- Burgundy + grey = rich and elevated\n' +
+    '- Olive + tan = earthy and rugged\n' +
+    '- Olive + white = clean and casual\n' +
+    '- Camel + white = warm and clean\n' +
+    '- Camel + navy = preppy and elevated\n' +
+    '- Light blue + navy = tonal and classic\n' +
     '- Belt color must match shoe color when both present\n' +
     '- Maximum 3 colors per outfit\n\n' +
     'FORMALITY RULES:\n' +
