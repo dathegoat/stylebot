@@ -1,6 +1,6 @@
 'use client';
 import posthog from 'posthog-js';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const occasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
 const styles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
@@ -33,6 +33,69 @@ function Skeleton() {
   );
 }
 
+function OutfitCard({ outfit, index, onShare, copied }) {
+  const total = outfit.items.reduce((s, item) => s + item.price, 0);
+  return (
+    <div className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+
+      <div className="p-5 pb-4">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <p className="font-medium text-gray-900 text-base">{outfit.title}</p>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={onShare}
+              className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full hover:border-gray-300 transition-all"
+            >
+              {copied ? 'Copied!' : '🔗'}
+            </button>
+            {index !== undefined && (
+              <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full">
+                Outfit {index + 1}
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="text-sm text-gray-400 leading-relaxed">{outfit.why}</p>
+      </div>
+
+      <div className="border-t border-gray-100">
+        {outfit.items.map((item, j) => (
+          <div key={j} className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0">
+            <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-base shrink-0">
+              {typeIcon[item.type] || '👕'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{typeLabel[item.type] || 'Item'}</p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-sm text-gray-400">${item.price}</span>
+              <a href={item.url} target="_blank"
+                onClick={() => posthog.capture('shop_clicked', { item: item.name, price: item.price })}
+                className="text-xs px-3 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
+                Shop
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+        <div>
+          <p className="text-xs text-gray-400">Total</p>
+          <p className="text-base font-medium text-gray-900">${total}</p>
+        </div>
+        <a href={outfit.items[0]?.url} target="_blank"
+          onClick={() => posthog.capture('shop_look_clicked', { outfit: outfit.title })}
+          className="text-sm px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:border-gray-400 transition-all">
+          Shop this look
+        </a>
+      </div>
+
+    </div>
+  );
+}
+
 export default function Home() {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(1);
@@ -46,6 +109,30 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState(null);
+  const [sharedOutfit, setSharedOutfit] = useState(null);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const encoded = params.get('outfit');
+    if (encoded) {
+      try {
+        const outfit = JSON.parse(atob(encoded));
+        setSharedOutfit(outfit);
+      } catch (e) {
+        // invalid param, ignore
+      }
+    }
+  }, []);
+
+  function shareOutfit(outfit, index) {
+    const encoded = btoa(JSON.stringify(outfit));
+    const url = `${window.location.origin}/?outfit=${encoded}`;
+    navigator.clipboard.writeText(url);
+    posthog.capture('outfit_shared', { outfit: outfit.title });
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  }
 
   async function getOutfits() {
     setLoading(true);
@@ -90,10 +177,35 @@ export default function Home() {
   }
 
   function reset() {
+    window.history.replaceState({}, '', '/');
+    setSharedOutfit(null);
     setStarted(false);
     setStep(1); setOccasion(null); setStyle(null); setTemperature(null);
     setBudget(150); setOutfits(null); setError(null);
     setEmail(''); setEmailSubmitted(false);
+  }
+
+  if (sharedOutfit) {
+    return (
+      <main className="min-h-screen bg-white flex flex-col items-center p-6">
+        <div className="w-full max-w-md">
+          <div className="mt-8 mb-8">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylebot</h1>
+            <p className="text-gray-400 text-sm">Someone shared this outfit with you</p>
+          </div>
+          <OutfitCard
+            outfit={sharedOutfit}
+            index={undefined}
+            onShare={() => shareOutfit(sharedOutfit, 'shared')}
+            copied={copiedIndex === 'shared'}
+          />
+          <button onClick={reset}
+            className="w-full py-4 rounded-xl bg-gray-900 text-white font-medium text-base hover:bg-gray-700 transition-all mt-2">
+            Get styled for free →
+          </button>
+        </div>
+      </main>
+    );
   }
 
   if (!started) {
@@ -229,58 +341,15 @@ export default function Home() {
               <div className="bg-red-50 text-red-500 text-sm rounded-xl p-4 mb-4">{error}</div>
             )}
 
-            {outfits && outfits.map((outfit, i) => {
-              const total = outfit.items.reduce((s, item) => s + item.price, 0);
-              return (
-                <div key={i} className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
-
-                  <div className="p-5 pb-4">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <p className="font-medium text-gray-900 text-base">{outfit.title}</p>
-                      <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full shrink-0">
-                        Outfit {i + 1}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-400 leading-relaxed">{outfit.why}</p>
-                  </div>
-
-                  <div className="border-t border-gray-100">
-                    {outfit.items.map((item, j) => (
-                      <div key={j} className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0">
-                        <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-base shrink-0">
-                          {typeIcon[item.type] || '👕'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{typeLabel[item.type] || 'Item'}</p>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="text-sm text-gray-400">${item.price}</span>
-                          <a href={item.url} target="_blank"
-                            onClick={() => posthog.capture('shop_clicked', { item: item.name, price: item.price })}
-                            className="text-xs px-3 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
-                            Shop
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
-                    <div>
-                      <p className="text-xs text-gray-400">Total</p>
-                      <p className="text-base font-medium text-gray-900">${total}</p>
-                    </div>
-                    <a href={outfit.items[0]?.url} target="_blank"
-                      onClick={() => posthog.capture('shop_look_clicked', { outfit: outfit.title })}
-                      className="text-sm px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:border-gray-400 transition-all">
-                      Shop this look
-                    </a>
-                  </div>
-
-                </div>
-              );
-            })}
+            {outfits && outfits.map((outfit, i) => (
+              <OutfitCard
+                key={i}
+                outfit={outfit}
+                index={i}
+                onShare={() => shareOutfit(outfit, i)}
+                copied={copiedIndex === i}
+              />
+            ))}
 
             {outfits && !emailSubmitted && (
               <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50">
