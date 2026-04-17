@@ -4,6 +4,15 @@ import { useState } from 'react';
 
 const occasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
 const styles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
+const temperatures = [
+  { label: 'Hot', display: '🥵 Hot (75°F+)' },
+  { label: 'Warm', display: '😎 Warm (55–75°F)' },
+  { label: 'Cool', display: '🧥 Cool (35–55°F)' },
+  { label: 'Cold', display: '🥶 Cold (below 35°F)' },
+];
+
+const typeIcon = { top: '👔', bottom: '👖', shoes: '👟', accessory: '⌚' };
+const typeLabel = { top: 'Top', bottom: 'Bottoms', shoes: 'Shoes', accessory: 'Accessory' };
 
 function Skeleton() {
   return (
@@ -33,6 +42,7 @@ export default function Home() {
   const [outfits, setOutfits] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [temperature, setTemperature] = useState(null);
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState(null);
@@ -41,17 +51,17 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setStep(3);
-    posthog.capture('outfit_requested', { occasion, style, budget });
+    posthog.capture('outfit_requested', { occasion, style, temperature, budget });
     try {
       const res = await fetch('/api/outfits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ occasion, style, budget }),
+        body: JSON.stringify({ occasion, style, temperature, budget }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setOutfits(data.outfits);
-      posthog.capture('outfit_received', { occasion, style, budget });
+      posthog.capture('outfit_received', { occasion, style, temperature, budget });
     } catch(e) {
       setError('Something went wrong. Please try again.');
     }
@@ -81,7 +91,7 @@ export default function Home() {
 
   function reset() {
     setStarted(false);
-    setStep(1); setOccasion(null); setStyle(null);
+    setStep(1); setOccasion(null); setStyle(null); setTemperature(null);
     setBudget(150); setOutfits(null); setError(null);
     setEmail(''); setEmailSubmitted(false);
   }
@@ -157,7 +167,17 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <button disabled={!occasion} onClick={() => setStep(2)}
+            <h2 className="text-lg font-medium text-gray-900 mb-1">What's the temperature?</h2>
+            <p className="text-sm text-gray-400 mb-6">So we can recommend the right fabrics and layers.</p>
+            <div className="flex flex-wrap gap-2 mb-8">
+              {temperatures.map(t => (
+                <button key={t.label} onClick={() => setTemperature(t.label)}
+                  className={`px-4 py-2 rounded-full text-sm border transition-all ${temperature === t.label ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
+                  {t.display}
+                </button>
+              ))}
+            </div>
+            <button disabled={!occasion || !temperature} onClick={() => setStep(2)}
               className="w-full py-3 rounded-xl bg-gray-900 text-white font-medium disabled:opacity-30 transition-opacity">
               Next
             </button>
@@ -200,7 +220,7 @@ export default function Home() {
               <h2 className="text-lg font-medium text-gray-900 mb-1">
                 {loading ? 'Finding your outfits...' : 'Your outfits'}
               </h2>
-              <p className="text-sm text-gray-400">{occasion} · {style} · ${budget} budget</p>
+              <p className="text-sm text-gray-400">{occasion} · {style} · {temperature} · ${budget} budget</p>
             </div>
 
             {loading && <Skeleton />}
@@ -209,34 +229,58 @@ export default function Home() {
               <div className="bg-red-50 text-red-500 text-sm rounded-xl p-4 mb-4">{error}</div>
             )}
 
-            {outfits && outfits.map((outfit, i) => (
-              <div key={i} className="border border-gray-100 rounded-2xl p-5 mb-4 hover:border-gray-200 transition-all">
-                <div className="flex items-start justify-between mb-1">
-                  <p className="font-medium text-gray-900">{outfit.title}</p>
-                  <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full ml-2 shrink-0">
-                    Outfit {i + 1}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-400 mb-4">{outfit.why}</p>
-                {outfit.items.map((item, j) => (
-                  <div key={j} className="flex items-center justify-between py-2 border-t border-gray-100 text-sm">
-                    <span className="text-gray-800">{item.name}</span>
-                    <div className="flex items-center gap-3 ml-2 shrink-0">
-                      <span className="text-gray-400">${item.price}</span>
-                      <a href={item.url} target="_blank"
-                        onClick={() => posthog.capture('shop_clicked', { item: item.name, price: item.price })}
-                        className="text-xs px-3 py-1 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
-                        Shop
-                      </a>
+            {outfits && outfits.map((outfit, i) => {
+              const total = outfit.items.reduce((s, item) => s + item.price, 0);
+              return (
+                <div key={i} className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+
+                  <div className="p-5 pb-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="font-medium text-gray-900 text-base">{outfit.title}</p>
+                      <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full shrink-0">
+                        Outfit {i + 1}
+                      </span>
                     </div>
+                    <p className="text-sm text-gray-400 leading-relaxed">{outfit.why}</p>
                   </div>
-                ))}
-                <div className="flex justify-between pt-3 border-t border-gray-200 mt-1 text-sm font-medium text-gray-900">
-                  <span>Total</span>
-                  <span>${outfit.items.reduce((s, i) => s + i.price, 0)}</span>
+
+                  <div className="border-t border-gray-100">
+                    {outfit.items.map((item, j) => (
+                      <div key={j} className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0">
+                        <div className="w-9 h-9 rounded-lg bg-gray-50 flex items-center justify-center text-base shrink-0">
+                          {typeIcon[item.type] || '👕'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{typeLabel[item.type] || 'Item'}</p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-sm text-gray-400">${item.price}</span>
+                          <a href={item.url} target="_blank"
+                            onClick={() => posthog.capture('shop_clicked', { item: item.name, price: item.price })}
+                            className="text-xs px-3 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
+                            Shop
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-400">Total</p>
+                      <p className="text-base font-medium text-gray-900">${total}</p>
+                    </div>
+                    <a href={outfit.items[0]?.url} target="_blank"
+                      onClick={() => posthog.capture('shop_look_clicked', { outfit: outfit.title })}
+                      className="text-sm px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:border-gray-400 transition-all">
+                      Shop this look
+                    </a>
+                  </div>
+
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {outfits && !emailSubmitted && (
               <div className="border border-gray-100 rounded-2xl p-5 mb-4 bg-gray-50">

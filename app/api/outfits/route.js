@@ -84,7 +84,8 @@ function validateAndFixOutfit(outfit) {
     items: fixedItems.map(item => ({
       name: item.displayName || item.name,
       price: item.price,
-      url: item.url
+      url: item.url,
+      type: item.type
     }))
   };
 }
@@ -96,16 +97,20 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const { occasion, style, budget } = body;
+  const { occasion, style, temperature, budget } = body;
 
   const validOccasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
   const validStyles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
+  const validTemperatures = ['Hot', 'Warm', 'Cool', 'Cold'];
 
   if (!validOccasions.includes(occasion)) {
     return NextResponse.json({ error: 'Invalid occasion' }, { status: 400 });
   }
   if (!validStyles.includes(style)) {
     return NextResponse.json({ error: 'Invalid style' }, { status: 400 });
+  }
+  if (!validTemperatures.includes(temperature)) {
+    return NextResponse.json({ error: 'Invalid temperature' }, { status: 400 });
   }
   if (!budget || typeof budget !== 'number' || budget < 50 || budget > 500) {
     return NextResponse.json({ error: 'Invalid budget' }, { status: 400 });
@@ -114,10 +119,10 @@ export async function POST(req) {
   const productList = Object.entries(PRODUCTS)
     .map(([key, p]) => '- ' + key + ' | type: ' + p.type + ' | color: ' + p.color + ' | formality: ' + p.formality + ' | styles: ' + p.styles.join(', ') + ' | $' + p.price)
     .join('\n');
-
   const prompt = 'You are Marcus, an expert mens personal stylist with 10 years of experience. You dress men with confidence and precision.\n\n' +
-    'CUSTOMER: Occasion: ' + occasion + ' | Style: ' + style + ' | Budget: $' + budget + '\n\n' +
+    'CUSTOMER: Occasion: ' + occasion + ' | Style: ' + style + ' | Temperature: ' + temperature + ' | Budget: $' + budget + '\n\n' +
     'AVAILABLE PRODUCTS (key | type | color | formality | styles | price):\n' +
+    'The KEY is the exact text before the first " | " — you MUST use this verbatim in the "name" field of your JSON.\n' +
     productList + '\n\n' +
     'COLOR THEORY SYSTEM:\n' +
     'NEUTRAL COLORS: white, grey, black, navy, tan, khaki, charcoal - all neutrals pair with each other\n\n' +
@@ -146,6 +151,11 @@ export async function POST(req) {
     '- Smart casual: elevated basics, clean footwear, structured tops\n' +
     '- Streetwear: bold combos, layers, sneakers required, caps allowed\n' +
     '- Rugged: flannel, denim, boots, cargo, earth tones\n\n' +
+    'TEMPERATURE RULES:\n' +
+    '- Hot (75°F+): lightweight fabrics only — linen, cotton, shorts allowed, no layers, no jackets, canvas sneakers or loafers, avoid dark colors that absorb heat\n' +
+    '- Warm (55–75°F): light layers optional, chinos or jeans, sneakers or boots both fine, light jacket only if budget allows\n' +
+    '- Cool (35–55°F): layering required, include a jacket or outer layer, boots strongly preferred over sneakers, no shorts\n' +
+    '- Cold (below 35°F): heavy layering required, overcoat or bomber if in catalog, boots only, warm fabrics like wool or fleece, no linen or canvas\n\n' +
     'CONSTRUCTION RULES:\n' +
     '- Each outfit = exactly 1 top + 1 bottom + 1 shoes + max 1 accessory\n' +
     '- Never 2 tops, 2 bottoms, or 2 shoes in same outfit\n' +
@@ -153,7 +163,9 @@ export async function POST(req) {
     '- Only use products from the list\n' +
     '- Stay under budget\n\n' +
     'Return EXACTLY 3 outfits as raw JSON only, no markdown:\n' +
-    '[{"title":"Confident outfit name","why":"Speak like a stylist to the customer. Mention specific colors, why they work together, and why this is right for this occasion.","items":[{"name":"exact product key","price":0},{"name":"exact product key","price":0},{"name":"exact product key","price":0}]}]';
+    'CRITICAL: The "name" field must be the exact product key from the list above (e.g. "white oxford shirt", not "Cotton King Slim Fit Oxford Shirt").\n' +
+    'Each outfit MUST include exactly 1 top, 1 bottom, and 1 shoes. Accessory is optional.\n' +
+    '[{"title":"Confident outfit name","why":"Speak like a stylist to the customer. Mention specific colors, why they work together, and why this is right for this occasion.","items":[{"name":"white oxford shirt","price":35},{"name":"slim chino pants","price":35},{"name":"white leather sneakers","price":45}]}]';
 
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -174,7 +186,12 @@ export async function POST(req) {
 
     const text = data.choices[0].message.content.replace(/```json|```/g, '').trim();
     const outfits = JSON.parse(text);
-    const fixedOutfits = outfits.slice(0, 3).map(validateAndFixOutfit);
+    const fixedOutfits = outfits.slice(0, 3)
+      .map(validateAndFixOutfit)
+      .filter(o => {
+        const types = o.items.map(i => i.type);
+        return types.includes('top') && types.includes('bottom') && types.includes('shoes');
+      });
 
     return NextResponse.json({ outfits: fixedOutfits });
 

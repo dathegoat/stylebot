@@ -7,8 +7,9 @@ export function PHProvider({ children }) {
   useEffect(() => {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: 'https://us.i.posthog.com',
-      person_profiles: 'identified_only',
-      capture_pageview: false
+      person_profiles: 'always',
+      capture_pageview: true,
+      capture_pageleave: true
     })
   }, [])
 
