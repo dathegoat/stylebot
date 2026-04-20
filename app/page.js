@@ -2,7 +2,7 @@
 import posthog from 'posthog-js';
 import { useState, useEffect } from 'react';
 
-const occasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
+const occasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview', 'Other'];
 const styles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
 const temperatures = [
   { label: 'Hot', display: '🥵 Hot (75°F+)' },
@@ -130,6 +130,7 @@ export default function Home() {
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState(null);
+  const [customOccasion, setCustomOccasion] = useState('');
   const [sharedOutfit, setSharedOutfit] = useState(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [outfitImages, setOutfitImages] = useState({});
@@ -161,22 +162,23 @@ export default function Home() {
     setError(null);
     setStep(3);
     setOutfitImages({});
-    posthog.capture('outfit_requested', { occasion, style, temperature, budget });
+    const displayOccasion = occasion === 'Other' ? customOccasion : occasion;
+    posthog.capture('outfit_requested', { occasion: displayOccasion, style, temperature, budget });
     try {
       const res = await fetch('/api/outfits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ occasion, style, temperature, budget }),
+        body: JSON.stringify({ occasion, customOccasion, style, temperature, budget }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setOutfits(data.outfits);
-      posthog.capture('outfit_received', { occasion, style, temperature, budget });
+      posthog.capture('outfit_received', { occasion: displayOccasion, style, temperature, budget });
 
       data.outfits.forEach((outfit, i) => {
         const topItem = outfit.items.find(item => item.type === 'top');
         const shoesItem = outfit.items.find(item => item.type === 'shoes');
-        const query = `${outfit.title} ${style} ${occasion} men ${topItem?.color || ''} ${shoesItem?.color || ''} fashion outfit`;
+        const query = `${outfit.title} ${style} ${displayOccasion} men ${topItem?.color || ''} ${shoesItem?.color || ''} fashion outfit`;
         fetch('/api/unsplash', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -221,7 +223,7 @@ export default function Home() {
     window.history.replaceState({}, '', '/');
     setSharedOutfit(null);
     setStarted(false);
-    setStep(1); setOccasion(null); setStyle(null); setTemperature(null);
+    setStep(1); setOccasion(null); setStyle(null); setTemperature(null); setCustomOccasion('');
     setBudget(150); setOutfits(null); setError(null); setOutfitImages({});
     setEmail(''); setEmailSubmitted(false);
   }
@@ -311,7 +313,7 @@ export default function Home() {
           <div>
             <h2 className="text-lg font-medium text-gray-900 mb-1">What's the occasion?</h2>
             <p className="text-sm text-gray-400 mb-6">Pick the situation you're dressing for.</p>
-            <div className="flex flex-wrap gap-2 mb-8">
+            <div className={`flex flex-wrap gap-2 ${occasion === 'Other' ? 'mb-3' : 'mb-8'}`}>
               {occasions.map(o => (
                 <button key={o} onClick={() => setOccasion(o)}
                   className={`px-4 py-2 rounded-full text-sm border transition-all ${occasion === o ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
@@ -319,6 +321,18 @@ export default function Home() {
                 </button>
               ))}
             </div>
+            {occasion === 'Other' && (
+              <div className="mb-8">
+                <input
+                  type="text"
+                  placeholder="Describe your occasion..."
+                  value={customOccasion}
+                  onChange={e => setCustomOccasion(e.target.value.slice(0, 100))}
+                  className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl outline-none focus:border-gray-900 transition-all"
+                />
+                <p className="text-xs text-gray-300 mt-1 text-right">{customOccasion.length}/100</p>
+              </div>
+            )}
             <h2 className="text-lg font-medium text-gray-900 mb-1">What's the temperature?</h2>
             <p className="text-sm text-gray-400 mb-6">So we can recommend the right fabrics and layers.</p>
             <div className="flex flex-wrap gap-2 mb-8">
@@ -329,7 +343,7 @@ export default function Home() {
                 </button>
               ))}
             </div>
-            <button disabled={!occasion || !temperature} onClick={() => setStep(2)}
+            <button disabled={!occasion || !temperature || (occasion === 'Other' && !customOccasion.trim())} onClick={() => setStep(2)}
               className="w-full py-3 rounded-xl bg-orange-500 text-white font-medium disabled:opacity-30 hover:bg-orange-600 transition-all">
               Next
             </button>
@@ -372,7 +386,7 @@ export default function Home() {
               <h2 className="text-lg font-medium text-gray-900 mb-1">
                 {loading ? 'Stylesmith is building your looks...' : 'Your outfits'}
               </h2>
-              <p className="text-sm text-gray-400">{occasion} · {style} · {temperature} · ${budget} budget</p>
+              <p className="text-sm text-gray-400">{occasion === 'Other' ? customOccasion : occasion} · {style} · {temperature} · ${budget} budget</p>
             </div>
 
             {loading && <Skeleton />}

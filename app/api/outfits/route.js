@@ -118,14 +118,18 @@ export async function POST(req) {
   }
 
   const body = await req.json();
-  const { occasion, style, temperature, budget } = body;
+  const { occasion, customOccasion: rawCustomOccasion, style, temperature, budget } = body;
+  const customOccasion = typeof rawCustomOccasion === 'string' ? rawCustomOccasion.replace(/[<>]/g, '').trim() : '';
 
-  const validOccasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview'];
+  const validOccasions = ['Date night', 'Casual hangout', 'Party', 'Business casual', 'Formal event', 'Interview', 'Other'];
   const validStyles = ['Minimal', 'Smart casual', 'Streetwear', 'Classic', 'Rugged'];
   const validTemperatures = ['Hot', 'Warm', 'Cool', 'Cold'];
 
   if (!validOccasions.includes(occasion)) {
     return NextResponse.json({ error: 'Invalid occasion' }, { status: 400 });
+  }
+  if (occasion === 'Other' && (!customOccasion || customOccasion.length > 100)) {
+    return NextResponse.json({ error: 'Please describe your occasion (max 100 characters)' }, { status: 400 });
   }
   if (!validStyles.includes(style)) {
     return NextResponse.json({ error: 'Invalid style' }, { status: 400 });
@@ -141,7 +145,8 @@ export async function POST(req) {
     .map(([key, p]) => '- ' + key + ' | type: ' + p.type + ' | color: ' + p.color + ' | formality: ' + p.formality + ' | styles: ' + p.styles.join(', ') + ' | $' + p.price)
     .join('\n');
   const prompt = 'You are Marcus, an expert mens personal stylist with 10 years of experience. You dress men with confidence and precision.\n\n' +
-    'CUSTOMER: Occasion: ' + occasion + ' | Style: ' + style + ' | Temperature: ' + temperature + ' | Budget: $' + budget + '\n\n' +
+    'CUSTOMER: Occasion: ' + (occasion === 'Other' ? customOccasion + ' (user-described custom occasion)' : occasion) + ' | Style: ' + style + ' | Temperature: ' + temperature + ' | Budget: $' + budget + '\n\n' +
+    (occasion === 'Other' ? 'If the occasion is user-described, infer the appropriate formality level and dress accordingly. Use your best judgment.\n\n' : '') +
     'AVAILABLE PRODUCTS (key | type | color | formality | styles | price):\n' +
     'The KEY is the exact text before the first " | " — you MUST use this verbatim in the "name" field of your JSON.\n' +
     productList + '\n\n' +
