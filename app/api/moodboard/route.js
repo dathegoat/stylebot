@@ -14,17 +14,17 @@ export async function POST(req) {
     return NextResponse.json({ url: null }, { status: 429 });
   }
 
-  const { query } = await req.json();
+  const { query, page = 1 } = await req.json();
   if (!query || typeof query !== 'string') {
     return NextResponse.json({ url: null }, { status: 400 });
   }
 
   try {
     const res = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape&page=${page}`,
       {
         headers: {
-          Authorization: `Client-ID ${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}`,
+          Authorization: process.env.PEXELS_API_KEY,
         },
       }
     );
@@ -34,15 +34,15 @@ export async function POST(req) {
     }
 
     const data = await res.json();
-    const photo = data.results?.[0];
+    const photo = data.photos?.[0];
 
     if (!photo) {
       return NextResponse.json({ url: null });
     }
 
     return NextResponse.json({
-      url: photo.urls.regular,
-      alt: photo.alt_description || query,
+      url: photo.src.large,
+      alt: photo.alt || query,
     });
   } catch (e) {
     return NextResponse.json({ url: null });

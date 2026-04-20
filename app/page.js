@@ -54,7 +54,7 @@ function OutfitCard({ outfit, index, onShare, copied, image }) {
             )}
           </div>
           {image?.url && imgLoaded && (
-            <p className="text-xs text-gray-300 px-5 pt-2">Photo: Unsplash</p>
+            <p className="text-xs text-gray-300 px-5 pt-2">Photo: Pexels</p>
           )}
         </>
       )}
@@ -186,12 +186,13 @@ export default function Home() {
 
       data.outfits.forEach((outfit, i) => {
         const topItem = outfit.items.find(item => item.type === 'top');
+        const bottomItem = outfit.items.find(item => item.type === 'bottom');
         const shoesItem = outfit.items.find(item => item.type === 'shoes');
-        const query = `${outfit.title} ${style} ${displayOccasion} men ${topItem?.color || ''} ${shoesItem?.color || ''} fashion outfit`;
-        fetch('/api/unsplash', {
+        const query = `${outfit.title} ${topItem?.color || ''} ${bottomItem?.color || ''} ${shoesItem?.color || ''} mens fashion ${displayOccasion}`;
+        fetch('/api/moodboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ query, page: i + 1 }),
         })
           .then(r => r.json())
           .then(imgData => {
