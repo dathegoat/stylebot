@@ -117,6 +117,15 @@ function OutfitCard({ outfit, index, onShare, copied, image }) {
   );
 }
 
+function Logo({ size = 36 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#111111"/>
+      <path d="M28 18 L50 72 L72 18 Q62 32 57 30 L50 72 L43 30 Q38 32 28 18Z" fill="none" stroke="#F97316" strokeWidth="3" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
 export default function Home() {
   const [started, setStarted] = useState(false);
   const [step, setStep] = useState(1);
@@ -256,8 +265,8 @@ export default function Home() {
     return (
       <main className="min-h-screen bg-white flex flex-col items-center justify-center p-6">
         <div className="w-full max-w-md text-center">
-          <div className="inline-block bg-gray-50 border border-gray-100 rounded-full px-4 py-1 text-xs text-gray-400 mb-8">
-            AI-powered styling for men
+          <div className="flex justify-center mb-8">
+            <Logo size={56} />
           </div>
           <h1 className="text-4xl font-semibold text-gray-900 mb-4 leading-tight">
             Dress like you meant to.
@@ -295,7 +304,10 @@ export default function Home() {
 
         <div className="mt-8 mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylesmith</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <Logo size={32} />
+              <h1 className="text-2xl font-semibold text-gray-900">Stylesmith</h1>
+            </div>
             <p className="text-gray-400 text-sm">Your AI stylist. Your best fits.</p>
           </div>
           <button onClick={reset} className="text-xs text-gray-400 hover:text-gray-600 underline">
