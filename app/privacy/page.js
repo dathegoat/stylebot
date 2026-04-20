@@ -8,12 +8,12 @@ export default function Privacy() {
         <div className="space-y-6 text-sm text-gray-600 leading-relaxed">
           <section>
             <h2 className="font-medium text-gray-900 mb-2">What we collect</h2>
-            <p>Stylebot does not require you to create an account. We do not collect or store any personal information. The occasion, style, and budget preferences you select are sent to our AI provider to generate outfit recommendations and are not stored.</p>
+            <p>Stylesmith does not require you to create an account. We do not collect or store any personal information. The occasion, style, and budget preferences you select are sent to our AI provider to generate outfit recommendations and are not stored.</p>
           </section>
 
           <section>
             <h2 className="font-medium text-gray-900 mb-2">Affiliate links</h2>
-            <p>Some links on Stylebot are affiliate links. If you click a link and make a purchase, we may earn a small commission at no extra cost to you. This helps us keep the app free.</p>
+            <p>Some links on Stylesmith are affiliate links. If you click a link and make a purchase, we may earn a small commission at no extra cost to you. This helps us keep the app free.</p>
           </section>
 
           <section>
@@ -23,17 +23,17 @@ export default function Privacy() {
 
           <section>
             <h2 className="font-medium text-gray-900 mb-2">Cookies</h2>
-            <p>Stylebot uses PostHog analytics which may set cookies to help us understand how users interact with the app. We do not use advertising cookies or sell any data to third parties. You can disable cookies in your browser settings at any time.</p>
+            <p>Stylesmith uses PostHog analytics which may set cookies to help us understand how users interact with the app. We do not use advertising cookies or sell any data to third parties. You can disable cookies in your browser settings at any time.</p>
           </section>
 
           <section>
             <h2 className="font-medium text-gray-900 mb-2">Contact</h2>
-            <p>If you have any questions about this policy, email us at stylebot6800@gmail.com</p>
+            <p>If you have any questions about this policy, email us at stylesmith@gmail.com {/* TODO: update with final contact email */}</p>
           </section>
         </div>
 
         <a href="/" className="inline-block mt-10 text-sm text-gray-400 underline hover:text-gray-600">
-          Back to Stylebot
+          Back to Stylesmith
         </a>
       </div>
     </main>

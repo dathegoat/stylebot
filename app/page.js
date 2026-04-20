@@ -33,10 +33,31 @@ function Skeleton() {
   );
 }
 
-function OutfitCard({ outfit, index, onShare, copied }) {
+function OutfitCard({ outfit, index, onShare, copied, image }) {
   const total = outfit.items.reduce((s, item) => s + item.price, 0);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   return (
     <div className="border border-gray-100 rounded-2xl overflow-hidden mb-4">
+
+      {image !== null && !imgError && (
+        <>
+          <div className="h-[180px] bg-gray-100 rounded-t-2xl relative overflow-hidden">
+            {image?.url && (
+              <img
+                src={image.url}
+                alt={image.alt || outfit.title}
+                onLoad={() => setImgLoaded(true)}
+                onError={() => setImgError(true)}
+                className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+              />
+            )}
+          </div>
+          {image?.url && imgLoaded && (
+            <p className="text-xs text-gray-300 px-5 pt-2">Photo: Unsplash</p>
+          )}
+        </>
+      )}
 
       <div className="p-5 pb-4">
         <div className="flex items-start justify-between gap-2 mb-2">
@@ -72,7 +93,7 @@ function OutfitCard({ outfit, index, onShare, copied }) {
               <span className="text-sm text-gray-400">${item.price}</span>
               <a href={item.url} target="_blank"
                 onClick={() => posthog.capture('shop_clicked', { item: item.name, price: item.price })}
-                className="text-xs px-3 py-2 rounded-full bg-gray-900 text-white hover:bg-gray-700 transition-all">
+                className="text-xs px-3 py-2 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-all">
                 Shop
               </a>
             </div>
@@ -111,6 +132,7 @@ export default function Home() {
   const [emailError, setEmailError] = useState(null);
   const [sharedOutfit, setSharedOutfit] = useState(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [outfitImages, setOutfitImages] = useState({});
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -138,6 +160,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     setStep(3);
+    setOutfitImages({});
     posthog.capture('outfit_requested', { occasion, style, temperature, budget });
     try {
       const res = await fetch('/api/outfits', {
@@ -149,6 +172,24 @@ export default function Home() {
       if (data.error) throw new Error(data.error);
       setOutfits(data.outfits);
       posthog.capture('outfit_received', { occasion, style, temperature, budget });
+
+      data.outfits.forEach((outfit, i) => {
+        const topItem = outfit.items.find(item => item.type === 'top');
+        const shoesItem = outfit.items.find(item => item.type === 'shoes');
+        const query = `${outfit.title} ${style} ${occasion} men ${topItem?.color || ''} ${shoesItem?.color || ''} fashion outfit`;
+        fetch('/api/unsplash', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query }),
+        })
+          .then(r => r.json())
+          .then(imgData => {
+            setOutfitImages(prev => ({ ...prev, [i]: imgData.url ? imgData : null }));
+          })
+          .catch(() => {
+            setOutfitImages(prev => ({ ...prev, [i]: null }));
+          });
+      });
     } catch(e) {
       setError('Something went wrong. Please try again.');
     }
@@ -181,7 +222,7 @@ export default function Home() {
     setSharedOutfit(null);
     setStarted(false);
     setStep(1); setOccasion(null); setStyle(null); setTemperature(null);
-    setBudget(150); setOutfits(null); setError(null);
+    setBudget(150); setOutfits(null); setError(null); setOutfitImages({});
     setEmail(''); setEmailSubmitted(false);
   }
 
@@ -190,7 +231,7 @@ export default function Home() {
       <main className="min-h-screen bg-white flex flex-col items-center p-6">
         <div className="w-full max-w-md">
           <div className="mt-8 mb-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylebot</h1>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylesmith</h1>
             <p className="text-gray-400 text-sm">Someone shared this outfit with you</p>
           </div>
           <OutfitCard
@@ -198,9 +239,10 @@ export default function Home() {
             index={undefined}
             onShare={() => shareOutfit(sharedOutfit, 'shared')}
             copied={copiedIndex === 'shared'}
+            image={null}
           />
           <button onClick={reset}
-            className="w-full py-4 rounded-xl bg-gray-900 text-white font-medium text-base hover:bg-gray-700 transition-all mt-2">
+            className="w-full py-4 rounded-xl bg-orange-500 text-white font-medium text-base hover:bg-orange-600 transition-all mt-2">
             Get styled for free →
           </button>
         </div>
@@ -216,15 +258,13 @@ export default function Home() {
             AI-powered styling for men
           </div>
           <h1 className="text-4xl font-semibold text-gray-900 mb-4 leading-tight">
-            Know exactly what<br />to wear. Every time.
+            Dress like you meant to.
           </h1>
           <p className="text-gray-400 text-base mb-10 leading-relaxed">
-            Tell us the occasion and your style.<br />
-            Get 3 complete outfits with real products<br />
-            you can buy instantly.
+            Tell us the occasion and your vibe. Get 3 complete outfits with real products you can buy instantly.
           </p>
           <button onClick={() => setStarted(true)}
-            className="w-full py-4 rounded-xl bg-gray-900 text-white font-medium text-base hover:bg-gray-700 transition-all mb-4">
+            className="w-full py-4 rounded-xl bg-orange-500 text-white font-medium text-base hover:bg-orange-600 transition-all mb-4">
             Get styled for free
           </button>
           <p className="text-xs text-gray-300">No account needed · Takes 30 seconds</p>
@@ -253,8 +293,8 @@ export default function Home() {
 
         <div className="mt-8 mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylebot</h1>
-            <p className="text-gray-400 text-sm">Your personal men's stylist</p>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Stylesmith</h1>
+            <p className="text-gray-400 text-sm">Your AI stylist. Your best fits.</p>
           </div>
           <button onClick={reset} className="text-xs text-gray-400 hover:text-gray-600 underline">
             Home
@@ -263,7 +303,7 @@ export default function Home() {
 
         <div className="flex gap-2 mb-8">
           {[1,2,3].map(n => (
-            <div key={n} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= n ? 'bg-gray-900' : 'bg-gray-200'}`} />
+            <div key={n} className={`h-1 flex-1 rounded-full transition-all duration-500 ${step >= n ? 'bg-orange-500' : 'bg-gray-200'}`} />
           ))}
         </div>
 
@@ -274,7 +314,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-2 mb-8">
               {occasions.map(o => (
                 <button key={o} onClick={() => setOccasion(o)}
-                  className={`px-4 py-2 rounded-full text-sm border transition-all ${occasion === o ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
+                  className={`px-4 py-2 rounded-full text-sm border transition-all ${occasion === o ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
                   {o}
                 </button>
               ))}
@@ -284,13 +324,13 @@ export default function Home() {
             <div className="flex flex-wrap gap-2 mb-8">
               {temperatures.map(t => (
                 <button key={t.label} onClick={() => setTemperature(t.label)}
-                  className={`px-4 py-2 rounded-full text-sm border transition-all ${temperature === t.label ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
+                  className={`px-4 py-2 rounded-full text-sm border transition-all ${temperature === t.label ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
                   {t.display}
                 </button>
               ))}
             </div>
             <button disabled={!occasion || !temperature} onClick={() => setStep(2)}
-              className="w-full py-3 rounded-xl bg-gray-900 text-white font-medium disabled:opacity-30 transition-opacity">
+              className="w-full py-3 rounded-xl bg-orange-500 text-white font-medium disabled:opacity-30 hover:bg-orange-600 transition-all">
               Next
             </button>
           </div>
@@ -303,7 +343,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-2 mb-8">
               {styles.map(s => (
                 <button key={s} onClick={() => setStyle(s)}
-                  className={`px-4 py-2 rounded-full text-sm border transition-all ${style === s ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
+                  className={`px-4 py-2 rounded-full text-sm border transition-all ${style === s ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-200 text-gray-700 hover:border-gray-400'}`}>
                   {s}
                 </button>
               ))}
@@ -316,7 +356,7 @@ export default function Home() {
               <span className="text-base font-medium text-gray-900 w-16">${budget}</span>
             </div>
             <button disabled={!style} onClick={getOutfits}
-              className="w-full py-3 rounded-xl bg-gray-900 text-white font-medium disabled:opacity-30 transition-opacity">
+              className="w-full py-3 rounded-xl bg-orange-500 text-white font-medium disabled:opacity-30 hover:bg-orange-600 transition-all">
               Get my outfits
             </button>
             <button onClick={() => setStep(1)}
@@ -330,7 +370,7 @@ export default function Home() {
           <div>
             <div className="mb-6">
               <h2 className="text-lg font-medium text-gray-900 mb-1">
-                {loading ? 'Finding your outfits...' : 'Your outfits'}
+                {loading ? 'Stylesmith is building your looks...' : 'Your outfits'}
               </h2>
               <p className="text-sm text-gray-400">{occasion} · {style} · {temperature} · ${budget} budget</p>
             </div>
@@ -348,6 +388,7 @@ export default function Home() {
                 index={i}
                 onShare={() => shareOutfit(outfit, i)}
                 copied={copiedIndex === i}
+                image={outfitImages[i]}
               />
             ))}
 
@@ -364,7 +405,7 @@ export default function Home() {
                     className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-gray-400"
                   />
                   <button onClick={submitEmail}
-                    className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-700 transition-all">
+                    className="px-4 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-all">
                     Join
                   </button>
                 </div>
@@ -386,7 +427,7 @@ export default function Home() {
                   Regenerate
                 </button>
                 <button onClick={reset}
-                  className="flex-1 py-3 rounded-xl bg-gray-900 text-white font-medium hover:bg-gray-700 transition-all">
+                  className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-medium hover:bg-orange-600 transition-all">
                   Start over
                 </button>
               </div>

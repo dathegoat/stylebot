@@ -65,7 +65,7 @@ const PRODUCTS = {
 };
 const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '1 h'),
+  limiter: Ratelimit.slidingWindow(25, '1 h'),
 });
 
 function matchProduct(itemName) {
